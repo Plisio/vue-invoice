@@ -1,0 +1,62 @@
+{
+  "name": "@plisio/vue-invoice",
+  "version": "0.1.0",
+  "private": false,
+  "author": {
+    "name": "Plisio",
+    "email": "webdev@plisio.net"
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/Plisio/vue-invoice.git"
+  },
+  "homepage": "https://github.com/Plisio/vue-invoice#readme",
+  "bugs": { 
+    "url" : "https://github.com/Plisio/vue-invoice/issues",
+    "email" : "webdev@plisio.net"
+  },
+  "description": "Vue invoice component for Plisio payment processing",
+  "keywords": [
+    "vue",
+    "rest-api",
+    "payment",
+    "invoice",
+    "crypto",
+    "plisio",
+    "white-label"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build-lib": "vue-cli-service build --target lib --name vue-invoice src/main.js",
+    "lint": "vue-cli-service lint"
+  },
+  "main": "dist/vue-invoice.umd.min.js",
+  "module": "dist/vue-invoice.umd.min.js",
+  "unpkg": "dist/vue-invoice.umd.min.js",
+  "jsdelivr": "dist/vue-invoice.umd.min.js",
+  "files": [
+    "dist/*"
+  ],
+  "dependencies": {
+    "clipboard": "^2.0.6",
+    "core-js": "^3.6.5",
+    "vue": "^2.6.11"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "@vue/eslint-config-standard": "^5.1.2",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "eslint-plugin-vue": "^6.2.2",
+    "node-sass": "^4.12.0",
+    "sass-loader": "^8.0.2",
+    "vue-template-compiler": "^2.6.11"
+  }
+}
