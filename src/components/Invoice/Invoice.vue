@@ -6,89 +6,119 @@
 
     <div class="invoice">
 
-      <invoice-progress-bar
-        v-if="invoiceIsProcessing"
-        :expire_utc="invoice.expire_utc"
-        expireMsg="Expired, waiting for invoice refresh..."
-      />
+      <slot name="invoice-header">
+        <div class="invoice__header">
+          <invoice-progress-bar
+            v-if="invoiceIsProcessing"
+            :expire_utc="invoice.expire_utc"
+            expireMsg="Expired, waiting for invoice refresh..."
+          />
 
-      <invoice-info
-        v-if="isPaymentWaiting"
-        :invoice="invoice"
-      />
+          <invoice-info
+            v-if="isPaymentWaiting"
+            :invoice="invoice"
+          />
+        </div>
+      </slot>
 
       <div class="invoice__content">
         <!-- pay -->
-        <invoice-step-pay
-          v-if="isPaymentWaiting"
-          :invoice="invoice"
-        />
+        <slot v-if="isPaymentWaiting" name="step-pay">
+          <invoice-step-pay :invoice="invoice" />
+        </slot>
 
         <!-- pending -->
-        <invoice-step-pending
+        <slot
           v-else-if="isWaitingForConfirmations"
-          :invoice="invoice"
-        />
+          name="step-pending"
+        >
+          <invoice-step-pending :invoice="invoice" />
+        </slot>
 
         <!-- result-overpaid -->
-        <invoice-step-result
+        <slot
           v-else-if="isOverpaid"
-          customClass="step_overpaid"
-          icon="icon_overpaid"
-          title="The order has been overpaid"
-          :hint="`You have payed
-            ${ formatCrypto(Math.abs(invoice.pending_amount) + Number(invoice.amount)) } ${invoice.currency},
-            it is more than required sum.
-            In case of inconvenience, please, contact support.
-          `"
-          :txUrl="invoice.txUrl"
-        />
+          name="step-overpaid"
+        >
+          <invoice-step-result
+            customClass="step_overpaid"
+            icon="icon_overpaid"
+            title="The order has been overpaid"
+            :hint="`You have payed
+              ${ formatCrypto(Math.abs(invoice.pending_amount) + Number(invoice.amount)) } ${invoice.currency},
+              it is more than required sum.
+              In case of inconvenience, please, contact support.
+            `"
+            :txUrl="invoice.txUrl"
+          />
+        </slot>
 
         <!-- result-finished -->
-        <invoice-step-result
+        <slot
           v-else-if="isFinished"
-          customClass="step_completed"
-          icon="icon_check"
-          title="Payment complete"
-          :txUrl="invoice.txUrl"
-        />
+          name="step-completed"
+        >
+          <invoice-step-result
+            customClass="step_completed"
+            icon="icon_check"
+            title="Payment complete"
+            :txUrl="invoice.txUrl"
+          />
+        </slot>
 
         <!-- result-underpaid -->
-        <invoice-step-result
+        <slot
           v-else-if="isUnderpaid"
-          customClass="step_underpaid"
-          icon="icon_expired"
-          title="The order has not been fully paid"
+          name="step-underpaid"
         >
-          <p class="invoice__hint">We have received
-            {{ (invoice.amount - invoice.pending_amount) | formatCrypto }} {{ invoice.currency }}
-            of {{ invoice.amount }} {{ invoice.currency }} required.
-            To get your payment back, please, contact support.
-          </p>
-        </invoice-step-result>
+          <invoice-step-result
+            customClass="step_underpaid"
+            icon="icon_expired"
+            title="The order has not been fully paid"
+          >
+            <p class="invoice__hint">We have received
+              {{ (invoice.amount - invoice.pending_amount) | formatCrypto }} {{ invoice.currency }}
+              of {{ invoice.amount }} {{ invoice.currency }} required.
+              To get your payment back, please, contact support.
+            </p>
+          </invoice-step-result>
+        </slot>
 
         <!-- result-expired -->
-        <invoice-step-result
+        <slot
           v-else-if="isExpired"
-          customClass="step_expired"
-          icon="icon_expired"
-          title="This order has expired"
+          name="step-expired"
         >
-          <p class="invoice__hint">Please, <a href="/" title="Home page">go back</a> and create a new one.</p>
-        </invoice-step-result>
+          <invoice-step-result
+            customClass="step_expired"
+            icon="icon_expired"
+            title="This order has expired"
+          >
+            <p class="invoice__hint">Please, <a href="/" title="Home page">go back</a> and create a new one.</p>
+          </invoice-step-result>
+        </slot>
 
         <!-- result-error -->
-        <invoice-step-result
+        <slot
           v-else-if="isError"
-          customClass="step_error"
-          icon="icon_exclamation"
-          title="Ooops..."
-          hint="Something went wrong with this operation. Please, contact support, so we could figure this out."
-        />
+          name="step-error"
+        >
+          <invoice-step-result
+            customClass="step_error"
+            icon="icon_exclamation"
+            title="Ooops..."
+            hint="Something went wrong with this operation. Please, contact support, so we could figure this out."
+          />
+        </slot>
 
         <!-- loading -->
-        <invoice-step-loading v-else />
+        <slot v-else  name="invoice-loading">
+          <invoice-step-loading />
+        </slot>
+
       </div>
+
+      <slot name="invoice-footer"></slot>
     </div>
   </div>
 </template>
@@ -101,7 +131,8 @@ import InvoiceProgressBar from './InvoiceProgressBar.vue'
 import InvoiceStepPay from './InvoiceStepPay.vue'
 import InvoiceStepPending from './InvoiceStepPending.vue'
 import InvoiceStepResult from './InvoiceStepResult.vue'
-import { formatCrypto } from './filters'
+
+import { formatCrypto } from '../../utils/formatters'
 import {
   STATUS_NEW,
   STATUS_PENDING,
@@ -110,7 +141,7 @@ import {
   STATUS_EXPIRED,
   STATUS_CANCELLED,
   STATUS_ERROR
-} from './constants'
+} from '../../utils/constants'
 
 export default {
   name: 'vue-invoice',
@@ -138,7 +169,11 @@ export default {
 
   computed: {
     invoiceIsProcessing () {
-      return this.invoice.status && [STATUS_NEW, STATUS_PENDING].includes(this.invoice.status)
+      const res = [STATUS_NEW, STATUS_PENDING].includes(this.invoice.status)
+      if (!this.preLoading && Object.keys(this.invoice).length && !res) {
+        this.$emit('cancelFetch')
+      }
+      return res
     },
     isPaymentWaiting () {
       return [STATUS_NEW, STATUS_PENDING].includes(this.invoice.status) && this.invoice.pending_amount > 0

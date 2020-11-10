@@ -1,2 +1,2 @@
-import VueInvoiceWhiteLabel from './components/Invoice'
-export default VueInvoiceWhiteLabel
+import VueInvoice from './components/Invoice'
+export default VueInvoice

@@ -13,108 +13,112 @@ npm install @plisio/vue-invoice
 | ----- | ---- | ------------- | ----------- |
 | `preLoading` | Boolean | true | Invoice is loading (while data prefetch) |
 | `invoice` | Object | {} | Invoice data |
+| `cancelFetch` | Function | function () {} | Callback function that discards fetching data interval |
 
 ## Slots
 | Slot name | Description |
 | ----- | ----------- |
 | `icons-sprite` | Invoice icon sprite. Uses own sprite by default. |
+| `invoice-header` | Invoice header. Uses own by default. |
+| `invoice-footer` | Invoice footer. Is ```null``` by default. |
+| `step-pay` | Invoice step-pay. Uses own by default. |
+| `step-pending` | Invoice step-pending. Uses own by default. |
+| `step-pending` | Invoice step-pending. Uses own by default. |
+| `step-overpaid` | Invoice step-overpaid. Uses own by default. |
+| `step-completed` | Invoice step-completed. Uses own by default. |
+| `step-underpaid` | Invoice step-underpaid. Uses own by default. |
+| `step-expired` | Invoice step-expired. Uses own by default. |
+| `step-error` | Invoice step-error. Uses own by default. |
+| `step-loading` | Invoice step-loading. Uses own by default. |
 
-Create vue white-label Plisio invoice. Css file is extracted to separate file, so you could include it manually or customize the styles yourself.
+Create vue-app and include Plisio invoice component. Checkout [example on Github](https://github.com/Plisio/vue-invoice/tree/main/examples).
+
+Css file is extracted to separate file, so you could include it manually or customize the styles yourself.
+
+Every component inside can be be replaced with a slot, so you can customize any particle of invoice.
+
+You are free to fetch data yourself, you can add any feautures you want to.
+
 ```
 <template>
-  <div class="app">
-    <h1>White label vue-app example</h1>
-    <vue-invoice
-      :preLoading="preLoading"
+  <div class="awesomeApp">
+    <Invoice
       :invoice="invoice"
-    />
+      :preLoading="preLoading"
+      @cancelFetch="cancelFetch"
+    >
+      <h3 slot="invoice-loading" style="text-align: center;">This is an example custom loading-step...</h3>
+    </Invoice>
   </div>
 </template>
 
 <script>
-import api from './api'
+import { getQueryVariable, getResource } from './utils/services'
 import VueInvoice from '@plisio/vue-invoice'
 
 export default {
-  name: 'App',
+  name: 'awesomeApp',
 
-  components: { VueInvoice },
+  components: { Invoice },
 
   data () {
     return {
       id: undefined,
-      preLoading: false,
-      interval: null,
+      intervalFetch: null,
+      preLoading: true,
       invoice: {}
     }
   },
 
-  computed: {
-    invoiceIsProcessing () {
-      // status names can be found here: https://plisio.net/documentation/endpoints/create-an-invoice#callback-fields
-      return this.invoice.status && ['new', 'pending'].includes(this.invoice.status)
-    }
-  },
-
   methods: {
-    getQueryVariable (variable) {
-      const foundOne = location.search.substring(1)
-        .split('&')
-        .filter(i => {
-          return decodeURIComponent(i.split('=')[0]) === variable
-        })
-      if (foundOne.length) {
-        return decodeURIComponent(foundOne[0].split('=')[1])
+    async fetchData () {
+      try {
+        const invoice = await getResource('http://localhost:3001/invoice',
+          {
+            params: {
+              page: 'invoice',
+              invoice_id: this.id
+            }
+          }
+        )
+        this.invoice = invoice || {}
+      } catch (error) {
+        console.log('Failed to fetch data.', error)
       }
     },
-    fetchData () {
-      return api.get('/check-invoice.php',
-        {
-          params: {
-            page: 'invoice',
-            invoice_id: this.id
-          }
-        }
-      )
-        .then(({ data, status }) => {
-          this.invoice = data
-        })
-        .catch(error => {
-          // eslint-disable-next-line
-          console.log(error)
-        })
+    cancelFetch () {
+      clearInterval(this.intervalFetch)
+    },
+    async init () {
+      this.id = getQueryVariable('invoice_id')
+      this.preLoading = true
+
+      if (!this.id) {
+        this.preLoading = false
+        console.error('No invoice_id param found.')
+      } else {
+        await this.fetchData()
+        this.preLoading = false
+        this.intervalFetch = setInterval(async () => {
+          await this.fetchData()
+        }, 15 * 1000)
+      }
     }
   },
 
   created () {
-    this.preLoading = true
-    this.id = this.getQueryVariable('invoice_id')
-    if (!this.id) {
-      this.preLoading = false
-      // eslint-disable-next-line
-      console.error('No invoice_id param found.')
-    } else {
-      this.fetchData()
-        .then(() => {
-          this.preLoading = false
-          this.interval = setInterval(() => {
-            this.fetchData()
-              .then(() => {
-                if (!this.invoiceIsProcessing) {
-                  clearInterval(this.interval)
-                }
-              })
-          }, 15 * 1000)
-        })
-      this.preLoading = false
-    }
+    this.init()
+  },
+
+  beforeDestroy () {
+    this.cancelFetch()
   }
 
 }
 </script>
 
 <style lang="scss" scoped>
-@import "~@plisio/vue-invoice/dist/vue-invoice.css";
+  @import "~@plisio/vue-invoice/dist/vue-invoice.css";  // optional
 </style>
 
 ```

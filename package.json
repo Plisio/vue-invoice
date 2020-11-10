@@ -1,6 +1,6 @@
 {
   "name": "@plisio/vue-invoice",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "author": {
     "name": "Plisio",
@@ -11,7 +11,7 @@
     "url" : "https://github.com/Plisio/vue-invoice.git"
   },
   "homepage": "https://github.com/Plisio/vue-invoice#readme",
-  "bugs": { 
+  "bugs": {
     "url" : "https://github.com/Plisio/vue-invoice/issues",
     "email" : "webdev@plisio.net"
   },
@@ -27,7 +27,9 @@
   ],
   "license": "MIT",
   "scripts": {
+    "start:mock": "json-server ./mock.json --port 3001",
     "serve": "vue-cli-service serve",
+    "dev": "(npm run start:mock) & npm run serve",
     "build-lib": "vue-cli-service build --target lib --name vue-invoice src/main.js",
     "lint": "vue-cli-service lint"
   },

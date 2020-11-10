@@ -21,7 +21,7 @@
 
 <script>
 import ClipboardJS from 'clipboard'
-import { formatFiat } from './filters'
+import { formatFiat } from '../../utils/formatters'
 
 export default {
   name: 'InvoiceInfo',
