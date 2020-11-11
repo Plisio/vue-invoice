@@ -9,13 +9,13 @@
       <slot name="invoice-header">
         <div class="invoice__header">
           <invoice-progress-bar
-            v-if="invoiceIsProcessing"
+            v-if="!preLoading && invoiceIsProcessing"
             :expire_utc="invoice.expire_utc"
             expireMsg="Expired, waiting for invoice refresh..."
           />
 
           <invoice-info
-            v-if="isPaymentWaiting"
+            v-if="!preLoading && Object.keys(invoice).length > 0 "
             :invoice="invoice"
           />
         </div>
@@ -77,7 +77,7 @@
             title="The order has not been fully paid"
           >
             <p class="invoice__hint">We have received
-              {{ (invoice.amount - invoice.pending_amount) | formatCrypto }} {{ invoice.currency }}
+              {{ formatCrypto(invoice.amount - invoice.pending_amount) }} {{ invoice.currency }}
               of {{ invoice.amount }} {{ invoice.currency }} required.
               To get your payment back, please, contact support.
             </p>

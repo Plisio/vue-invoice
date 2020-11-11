@@ -23,7 +23,7 @@
       <input
         type="text"
         id="step_pay__address"
-        class="step_pay__input invoiceCopy"
+        class="step_pay__input invoice__copy_stepPay"
         :value="invoice.wallet_hash"
         readonly
         aria-label="Payment address"
@@ -37,11 +37,14 @@
 
     <!-- amount -->
     <div class="step_pay__formGroup">
-      <span class="step_pay__inputGroup_prepend">{{ invoice.currency }}</span>
+      <span
+        class="step_pay__inputGroup_prepend step_pay__currency invoice__copy_stepPay"
+        data-clipboard-target=".step_pay__currency"
+      >{{ invoice.currency }}</span>
       <input
         type="text"
         id="step_pay__amount"
-        class="step_pay__input invoiceCopy"
+        class="step_pay__input invoice__copy_stepPay"
         :value="invoice.pending_amount"
         readonly
         aria-label="Pending amount"
@@ -72,9 +75,19 @@ export default {
     }
   },
 
+  data () {
+    return {
+      clipBoard: null
+    }
+  },
+
   mounted () {
     // eslint-disable-next-line
-    new ClipboardJS('.invoiceCopy')
+    this.clipBoard = new ClipboardJS('.invoice__copy_stepPay')
+  },
+
+  beforeDestroy () {
+    this.clipBoard.destroy()
   }
 
 }

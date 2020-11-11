@@ -1,20 +1,32 @@
 <template>
   <div class="invoice__info info">
     <div class="info__shop">
-      <small>Order #</small>{{ invoice.order_id }}
+      <small>Order #</small>
+      <span
+        class="info__orderId invoice__copy_info"
+        data-clipboard-target=".info__orderId"
+      >{{ invoice.order_id }}</span>
     </div>
     <div class="info__amount">
       <strong
-        class="info__amount_crypto invoiceCopy"
+        class="info__amount_crypto invoice__copy_info"
         data-clipboard-target=".info__amount_crypto"
       >{{ invoice.amount }}</strong>
       &nbsp;
       <strong
-        class="info__amount_curr invoiceCopy"
+        class="info__amount_curr invoice__copy_info"
         data-clipboard-target=".info__amount_curr"
       >{{ invoice.currency }}</strong>
       <br>
-      {{ amountUSD | formatFiat }} &nbsp; USD
+      <span
+        class="info__sourceAmount invoice__copy_info"
+        data-clipboard-target=".info__sourceAmount"
+      >{{ sourceAmount | formatFiat }}</span>
+      &nbsp;
+      <span
+        class="info__sourceCurrency invoice__copy_info"
+        data-clipboard-target=".info__sourceCurrency"
+      >{{ invoice.source_currency }}</span>
     </div>
   </div>
 </template>
@@ -34,8 +46,14 @@ export default {
     }
   },
 
+  data () {
+    return {
+      clipBoard: null
+    }
+  },
+
   computed: {
-    amountUSD () {
+    sourceAmount () {
       return this.invoice.amount / this.invoice.source_rate
     }
   },
@@ -46,7 +64,11 @@ export default {
 
   mounted () {
     // eslint-disable-next-line
-    new ClipboardJS('.invoiceCopy')
+    this.clipBoard = new ClipboardJS('.invoice__copy_info')
+  },
+
+  beforeDestroy () {
+    this.clipBoard.destroy()
   }
 }
 </script>
@@ -58,6 +80,7 @@ export default {
     align-items: center;
     padding-top: 1rem;
     padding-bottom: 1rem;
+    box-shadow: 0 5px 2.5px -2.5px rgba(0,0,0,.1);
     &__shop {
       padding-left: $spacer;
       font-weight: 700;

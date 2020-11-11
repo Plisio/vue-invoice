@@ -56,8 +56,7 @@ export default {
       this.dateToRender.hours = Math.floor((this.timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
       this.dateToRender.minutes = Math.floor((this.timeLeft % (1000 * 60 * 60)) / (1000 * 60))
       this.dateToRender.seconds = Math.floor((this.timeLeft % (1000 * 60)) / 1000)
-      this.progress = 100 - (this.timeLeft / this.timeTotal) * 100
-      this.progress = Math.round(this.progress * 100) / 100
+      this.progress = Math.floor(100 - (this.timeLeft / this.timeTotal) * 100)
     },
 
     render () {
@@ -72,11 +71,10 @@ export default {
       }
     },
 
-    fin () {
+    fin (firstRender = false) {
+      if (firstRender) this.render()
       clearTimeout(this.timerId)
-      if (this.callback) {
-        this.callback()
-      }
+      if (this.callback) this.callback()
       this.$emit('expired')
     },
 
@@ -93,25 +91,16 @@ export default {
     init () {
       this.calc()
       this.timeTotal = this.timeLeft
-      this.render()
-      if (this.timeLeft <= 0) {
-        this.fin()
-      } else {
-        this.tick()
-      }
+      this.timeLeft <= 0 ? this.fin(true) : this.tick()
     }
   },
 
   mounted () {
-    this.$nextTick(() => {
-      this.init()
-    })
+    this.$nextTick(() => this.init())
   },
 
   beforeDestroy () {
-    if (this.timerId) {
-      clearTimeout(this.timerId)
-    }
+    if (this.timerId) clearTimeout(this.timerId)
   }
 }
 </script>
